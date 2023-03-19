@@ -269,4 +269,4 @@ end
 
 
 
-end # module DeepRL
+end # module DDPG
