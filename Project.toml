@@ -1,0 +1,4 @@
+name = "DDPG"
+uuid = "9d30f46e-d858-43a2-9314-f4522ec82850"
+authors = ["Sven Duve <svenduve@gmail.com>"]
+version = "0.1.0"
