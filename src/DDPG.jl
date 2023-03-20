@@ -294,25 +294,26 @@ function renderEnv(environment, policy, seed=42)
     end
 
     s, info = env.reset(seed=seed)
-    @show s
+
     R = []
     notSolved = true
 
-        while notSolved
-            
-            a = action(policy, s, false, EnvParameter(), HyperParameter()) #action(t::Clamped, m::Bool, s::Vector{Float32}, p::Parameter)
-            # a = NODERL.action(Randomized(), false, s, p) #action(t::Clamped, m::Bool, s::Vector{Float32}, p::Parameter)
+    while notSolved
+        
+        a = action(policy, s, false, EnvParameter(), HyperParameter()) 
 
-            s´, r, terminated, truncated, _ = env.step(a)
+        s´, r, terminated, truncated, _ = env.step(a)
 
-            terminated | truncated ? t = true : t = false
+        terminated | truncated ? t = true : t = false
 
-            append!(R, r)
+        append!(R, r)
 
-            sleep(0.05)
-            s = s´
-            notSolved = !t
-        end
+        sleep(0.05)
+        s = s´
+        notSolved = !t
+    end
+
+    println("The agent has achieved return $(sum(R))")
 
     env.close()
 
