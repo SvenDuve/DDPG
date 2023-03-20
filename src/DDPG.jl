@@ -160,18 +160,19 @@ function train_step!(S, A, R, S´, T, μθ, μθ´, Qϕ, Qϕ´, hp::HyperParamet
     Flux.update!(opt_critic, Qϕ, dϕ[1])
     #@show Flux.params(Qϕ)[1]
     
-    push!(hp.critic_loss, Flux.Losses.mse(Qϕ(vcat(S, A)), Y))
     
     #actor
     dθ = Flux.gradient(m -> -mean(Qϕ(vcat(S, m(S)))), μθ)
     Flux.update!(opt_actor, μθ, dθ[1])
     
-    push!(hp.actor_loss, -mean(Qϕ(vcat(S, μθ(S)))))
     
     #@show Flux.params(Qϕ´)[1]
     soft_update!(Qϕ´, Qϕ, 0.005)
     soft_update!(μθ´, μθ, 0.005)
     #@show Flux.params(Qϕ´)[1]
+
+    # push!(hyperParams.critic_loss, Flux.Losses.mse(Qϕ(vcat(S, A)), Y))
+    # push!(hyperParams.actor_loss, -mean(Qϕ(vcat(S, μθ(S)))))
 
     #verify_update(Qϕ´, Qϕ)
 
@@ -217,16 +218,16 @@ function agent(environment, hyperParams::HyperParameter)
     while episode ≤ hyperParams.training_episodes
 
         frames = 0
-        s = env.reset()[1]
+        s, info = env.reset()
         episode_rewards = 0
         t = false
         
         for step in 1:hyperParams.maximum_episode_length
             
             a = action(μθ, s, true, envParams, hyperParams)
-            s´, r, ter, tru, _ = env.step(a)
+            s´, r, terminated, truncated, _ = env.step(a)
 
-            ter | tru ? t = true : t = false
+            terminated | truncated ? t = true : t = false
 
             episode_rewards += r
             
