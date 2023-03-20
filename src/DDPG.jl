@@ -12,7 +12,9 @@ using MLUtils
 # import Base.push!
 
 
-export  agent, HyperParameter
+export  agent, 
+        HyperParameter, 
+        renderEnv
 
 
 @with_kw mutable struct EnvParameter
@@ -180,7 +182,12 @@ function agent(environment, hyperParams::HyperParameter)
     println("Hello people I am here")
 
     gym = pyimport("gym")
-    env = gym.make(environment)
+    if environment == "LunarLander-v2"
+        global env = gym.make(environment, continuous=true)
+    else
+        global env = gym.make(environment)
+    end
+
     envParams = EnvParameter()
 
     # Reset Parameters
@@ -217,7 +224,9 @@ function agent(environment, hyperParams::HyperParameter)
         for step in 1:hyperParams.maximum_episode_length
             
             a = action(μθ, s, true, envParams, hyperParams)
-            s´, r, t, _ = env.step(a)
+            s´, r, ter, tru, _ = env.step(a)
+
+            ter | tru ? t = true : t = false
 
             episode_rewards += r
             
@@ -262,11 +271,51 @@ end
 
 
 # Works
-# agent(DDPG(), "BipedalWalker-v3", HyperParameter(expl_noise=0.1f0, noise_clip=0.3f0, training_episodes=10000, maximum_episode_length=3000, train_start=20, batch_size=128, critic_η=0.0001, actor_η=0.0001))
+# hp = agent("BipedalWalker-v3", HyperParameter(expl_noise=0.1f0, noise_clip=0.3f0, training_episodes=2000, maximum_episode_length=3000, train_start=20, batch_size=128, critic_η=0.0001, actor_η=0.0001))
+# hp = agent("Pendulum-v1", HyperParameter(expl_noise=0.2f0, noise_clip=0.5f0, training_episodes=300, maximum_episode_length=3000, train_start=20, batch_size=128))
+
+
+# hp = agent("MountainCarContinuous-v0", HyperParameter(expl_noise=0.2f0, noise_clip=0.5f0, training_episodes=300, maximum_episode_length=3000, train_start=20, batch_size=128))
+
+
 # hp = agent(DDPG(), "BipedalWalker-v3", HyperParameter(expl_noise=0.2f0, noise_clip=0.5f0, training_episodes=200, maximum_episode_length=1000, train_start=20, batch_size=64, store_frequency=20))
 # hp = agent("Pendulum-v1", HyperParameter(expl_noise=0.2f0, noise_clip=0.5f0, training_episodes=200, maximum_episode_length=1000, train_start=20, batch_size=64, store_frequency=20))
 
 
+function renderEnv(environment, policy, seed=42)
+
+    gym = pyimport("gym")
+    
+    if environment == "LunarLander-v2"
+        global env = gym.make(environment, continuous = true, render_mode="human")
+    else
+        global env = gym.make(environment, render_mode="human")
+    end
+
+    s, info = env.reset(seed=seed)
+    @show s
+    R = []
+    notSolved = true
+
+        while notSolved
+            
+            a = action(policy, s, false, EnvParameter(), HyperParameter()) #action(t::Clamped, m::Bool, s::Vector{Float32}, p::Parameter)
+            # a = NODERL.action(Randomized(), false, s, p) #action(t::Clamped, m::Bool, s::Vector{Float32}, p::Parameter)
+
+            s´, r, terminated, truncated, _ = env.step(a)
+
+            terminated | truncated ? t = true : t = false
+
+            append!(R, r)
+
+            sleep(0.05)
+            s = s´
+            notSolved = !t
+        end
+
+    env.close()
+
+end #renderEnv
 
 
 end # module DDPG
