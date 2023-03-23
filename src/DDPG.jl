@@ -253,7 +253,7 @@ function agent(environment, hyperParams::HyperParameter)
 
         
         if episode % hyperParams.store_frequency == 0
-            push!(hyperParams.trained_agents, μθ)
+            push!(hyperParams.trained_agents, deepcopy(μθ))
         end
 
 
@@ -274,6 +274,7 @@ end
 # Works
 # hp = agent("BipedalWalker-v3", HyperParameter(expl_noise=0.1f0, noise_clip=0.3f0, training_episodes=2000, maximum_episode_length=3000, train_start=20, batch_size=128, critic_η=0.0001, actor_η=0.0001))
 # hp = agent("Pendulum-v1", HyperParameter(expl_noise=0.2f0, noise_clip=0.5f0, training_episodes=300, maximum_episode_length=3000, train_start=20, batch_size=128))
+# hp = agent("LunarLander-v2", HyperParameter(expl_noise=0.2f0, training_episodes=1000, maximum_episode_length=3000, train_start=20, batch_size=128, critic_η=0.0001, actor_η=0.0001))
 
 
 # hp = agent("MountainCarContinuous-v0", HyperParameter(expl_noise=0.2f0, noise_clip=0.5f0, training_episodes=300, maximum_episode_length=3000, train_start=20, batch_size=128))
