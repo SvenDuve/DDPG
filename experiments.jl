@@ -46,4 +46,11 @@ writedlm("lunarlander_DDPG.csv", series, ',')
 # load matrix from the CSV file
 # B = readdlm("pendulum_DDPG.csv", ',')
 
+using BSON
 
+
+using BSON: @save
+
+for (episode, model) in zip(collect(100:100:1000), hp.trained_agents)
+    @save "LL_" * string(episode) * ".bson" model
+end
