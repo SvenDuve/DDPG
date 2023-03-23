@@ -8,7 +8,7 @@ results = []
 
 for i in collect(1:10)
 
-    hp = DDPG.agent("LunarLander-v2", DDPG.HyperParameter(expl_noise=0.2f0, training_episodes=1000, maximum_episode_length=3000, train_start=20, batch_size=128, critic_η=0.0001, actor_η=0.0001))
+    hp = DDPG.agent("Pendulum-v1", DDPG.HyperParameter(expl_noise=0.1f0, noise_clip=0.5f0, training_episodes=400, maximum_episode_length=3000, train_start=20, batch_size=128))
 
     push!(results, hp)
 
@@ -51,6 +51,12 @@ using BSON
 
 using BSON: @save
 
-for (episode, model) in zip(collect(100:100:1000), hp.trained_agents)
-    @save "LL_" * string(episode) * ".bson" model
+for (episode, model) in zip(collect(100:100:400), hp.trained_agents)
+    @save "Pendulum_" * string(episode) * ".bson" model
 end
+
+
+using BSON: @load
+using Flux
+
+@load "LL_1000.bson" model
