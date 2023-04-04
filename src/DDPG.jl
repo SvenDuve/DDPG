@@ -14,7 +14,14 @@ using MLUtils
 
 export  agent, 
         HyperParameter, 
-        renderEnv
+        renderEnv, 
+        setCritic, 
+        setActor,
+        ReplayBuffer,
+        remember, 
+        sample,
+        soft_update!,
+        train_step!
 
 
 @with_kw mutable struct EnvParameter
@@ -154,33 +161,22 @@ function train_step!(S, A, R, S´, T, μθ, μθ´, Qϕ, Qϕ´, hp::HyperParamet
 
     Y = R' .+ hp.γ * (1 .- T)' .* Qϕ´(vcat(S´, μθ´(S)))   
 
-    # Works
-    #@show Flux.params(Qϕ)[1]
+    # Gradient Descent Critic
     dϕ = Flux.gradient(m -> Flux.Losses.mse(m(vcat(S, A)), Y), Qϕ)
     Flux.update!(opt_critic, Qϕ, dϕ[1])
-    #@show Flux.params(Qϕ)[1]
     
-    
-    #actor
+    # Gradient Descent Actor
     dθ = Flux.gradient(m -> -mean(Qϕ(vcat(S, m(S)))), μθ)
     Flux.update!(opt_actor, μθ, dθ[1])
-    
-    
-    #@show Flux.params(Qϕ´)[1]
+
+    # Soft update
     soft_update!(Qϕ´, Qϕ, 0.005)
     soft_update!(μθ´, μθ, 0.005)
-    #@show Flux.params(Qϕ´)[1]
-
-    # push!(hyperParams.critic_loss, Flux.Losses.mse(Qϕ(vcat(S, A)), Y))
-    # push!(hyperParams.actor_loss, -mean(Qϕ(vcat(S, μθ(S)))))
-
-    #verify_update(Qϕ´, Qϕ)
 
 end
 
 
 function agent(environment, hyperParams::HyperParameter)
-    println("Hello people I am here")
 
     gym = pyimport("gym")
     if environment == "LunarLander-v2"
