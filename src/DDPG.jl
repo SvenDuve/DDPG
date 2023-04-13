@@ -2,7 +2,7 @@ module DDPG
 
 using Flux, Flux.Optimise
 import Flux.params
-using Distributions
+import Distributions
 using Statistics
 using Conda
 using PyCall
@@ -18,9 +18,6 @@ export  agent,
         renderEnv, 
         setCritic, 
         setActor,
-        remember, 
-        sample,
-        soft_update!,
         train_step!
 
 
@@ -103,34 +100,34 @@ end
 # end
 
 
-function remember(buffer::ReplayBuffer, state, action, reward, next_state, done)
-    if length(buffer.memory) < buffer.capacity
-        push!(buffer.memory, (state, action, reward, next_state, done))
-    else
-        buffer.memory[buffer.pos] = (state, action, reward, next_state, done)
-    end
-    buffer.pos = mod1(buffer.pos + 1, buffer.capacity)
-end
+# function remember(buffer::ReplayBuffer, state, action, reward, next_state, done)
+#     if length(buffer.memory) < buffer.capacity
+#         push!(buffer.memory, (state, action, reward, next_state, done))
+#     else
+#         buffer.memory[buffer.pos] = (state, action, reward, next_state, done)
+#     end
+#     buffer.pos = mod1(buffer.pos + 1, buffer.capacity)
+# end
 
 
-function sample(buffer::ReplayBuffer, method::AgentMethod, batch_size::Int)
-    batch = rand(buffer.memory, batch_size)
-    states, actions, rewards, next_states, dones = [], [], [], [], []
-    for (s, a, r, ns, d) in batch
-        push!(states, s)
-        push!(actions, a)
-        push!(rewards, r)
-        push!(next_states, ns)
-        push!(dones, d)
-    end
-    return hcat(states...), hcat(actions...), rewards, hcat(next_states...), dones
-end
+# function sample(buffer::ReplayBuffer, method::AgentMethod, batch_size::Int)
+#     batch = rand(buffer.memory, batch_size)
+#     states, actions, rewards, next_states, dones = [], [], [], [], []
+#     for (s, a, r, ns, d) in batch
+#         push!(states, s)
+#         push!(actions, a)
+#         push!(rewards, r)
+#         push!(next_states, ns)
+#         push!(dones, d)
+#     end
+#     return hcat(states...), hcat(actions...), rewards, hcat(next_states...), dones
+# end
 
 
 # Define the action, actor_loss, and critic_loss functions
 function action(model, state, train, ep, hp)
     if train
-        a = model(state) .+ clamp.(rand(Normal{Float32}(0.f0, hp.expl_noise), size(ep.action_size)), -hp.noise_clip, hp.noise_clip)
+        a = model(state) .+ clamp.(rand(Distributions.Normal{Float32}(0.f0, hp.expl_noise), size(ep.action_size)), -hp.noise_clip, hp.noise_clip)
         return clamp.(a, ep.action_bound_low, ep.action_bound_high)
     else
         return model(state)
