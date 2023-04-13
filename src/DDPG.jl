@@ -13,56 +13,54 @@ using RLTypes
 # import Base.push!
 
 
-export  agent, 
-        HyperParameter, 
+export  agent,
         renderEnv, 
         setCritic, 
         setActor,
-        ReplayBuffer,
         remember, 
         sample,
         soft_update!,
         train_step!
 
 
-@with_kw mutable struct EnvParameter
-    # Dimensions
-    ## Actions
-    action_size::Int =                      1
-    action_bound::Float32 =                 1.f0
-    action_bound_high::Array{Float32} =     [1.f0]
-    action_bound_low::Array{Float32} =      [-1.f0]
-    ## States
-    state_size::Int =                       1
-    state_bound_high::Array{Float32} =      [1.f0]
-    state_bound_low::Array{Float32} =       [1.f0]
-end
+# @with_kw mutable struct EnvParameter
+#     # Dimensions
+#     ## Actions
+#     action_size::Int =                      1
+#     action_bound::Float32 =                 1.f0
+#     action_bound_high::Array{Float32} =     [1.f0]
+#     action_bound_low::Array{Float32} =      [-1.f0]
+#     ## States
+#     state_size::Int =                       1
+#     state_bound_high::Array{Float32} =      [1.f0]
+#     state_bound_low::Array{Float32} =       [1.f0]
+# end
 
-@with_kw mutable struct HyperParameter
-    # Buffer size
-    buffer_size::Int =                      1000000
-    # Exploration
-    expl_noise::Float32 =                   0.2f0
-    noise_clip::Float32 =                   1.f0
-    # Training Metrics
-    training_episodes::Int =                300
-    maximum_episode_length::Int =           1000
-    train_start:: Int =                     10
-    batch_size::Int =                       64
-    # Metrics
-    episode_reward::Array{Float32} =        []
-    critic_loss::Array{Float32} =           [0.f0]
-    actor_loss::Array{Float32} =            [0.f0]
-    episode_steps::Array{Int} =             []
-    # Discount
-    γ::Float32 =                            0.99f0
-    # Learning Rates
-    critic_η::Float64 =                     0.001
-    actor_η::Float64 =                      0.001
-    # Agents
-    store_frequency::Int =                  100
-    trained_agents =                        []
-end
+# @with_kw mutable struct HyperParameter
+#     # Buffer size
+#     buffer_size::Int =                      1000000
+#     # Exploration
+#     expl_noise::Float32 =                   0.2f0
+#     noise_clip::Float32 =                   1.f0
+#     # Training Metrics
+#     training_episodes::Int =                300
+#     maximum_episode_length::Int =           1000
+#     train_start:: Int =                     10
+#     batch_size::Int =                       64
+#     # Metrics
+#     episode_reward::Array{Float32} =        []
+#     critic_loss::Array{Float32} =           [0.f0]
+#     actor_loss::Array{Float32} =            [0.f0]
+#     episode_steps::Array{Int} =             []
+#     # Discount
+#     γ::Float32 =                            0.99f0
+#     # Learning Rates
+#     critic_η::Float64 =                     0.001
+#     actor_η::Float64 =                      0.001
+#     # Agents
+#     store_frequency::Int =                  100
+#     trained_agents =                        []
+# end
 
         
 function setCritic(state_size, action_size)
@@ -90,18 +88,18 @@ end
 
 
 
-# Define the experience replay buffer
-mutable struct ReplayBuffer
-    capacity::Int
-    memory::Vector{Tuple{Vector{Float32}, Vector{Float32}, Float32, Vector{Float32}, Bool}}
-    pos::Int
-end
+# # Define the experience replay buffer
+# mutable struct ReplayBuffer
+#     capacity::Int
+#     memory::Vector{Tuple{Vector{Float32}, Vector{Float32}, Float32, Vector{Float32}, Bool}}
+#     pos::Int
+# end
 
-# outer constructor for the Replay Buffer
-function ReplayBuffer(capacity::Int)
-    memory = []
-    return ReplayBuffer(capacity, memory, 1)
-end
+# # outer constructor for the Replay Buffer
+# function ReplayBuffer(capacity::Int)
+#     memory = []
+#     return ReplayBuffer(capacity, memory, 1)
+# end
 
 
 function remember(buffer::ReplayBuffer, state, action, reward, next_state, done)
@@ -298,7 +296,7 @@ function renderEnv(environment, policy, seed=42)
 
     while notSolved
         
-        a = action(policy, s, false, EnvParameter(), HyperParameter()) 
+        a = action(policy, s, false, EnvParameter(), AgentParameter()) 
 
         s´, r, terminated, truncated, _ = env.step(a)
 
