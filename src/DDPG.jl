@@ -9,6 +9,7 @@ using PyCall
 using Parameters 
 using UnPack
 using MLUtils
+using RLTypes
 # import Base.push!
 
 
@@ -157,9 +158,9 @@ end
 
 
 
-function train_step!(S, A, R, S´, T, μθ, μθ´, Qϕ, Qϕ´, hp::HyperParameter)
+function train_step!(S, A, R, S´, T, μθ, μθ´, Qϕ, Qϕ´, ap::Parameter)
 
-    Y = R' .+ hp.γ * (1 .- T)' .* Qϕ´(vcat(S´, μθ´(S)))   
+    Y = R' .+ ap.γ * (1 .- T)' .* Qϕ´(vcat(S´, μθ´(S)))   
 
     # Gradient Descent Critic
     dϕ = Flux.gradient(m -> Flux.Losses.mse(m(vcat(S, A)), Y), Qϕ)
@@ -176,7 +177,7 @@ function train_step!(S, A, R, S´, T, μθ, μθ´, Qϕ, Qϕ´, hp::HyperParamet
 end
 
 
-function agent(environment, hyperParams::HyperParameter)
+function agent(environment, agentParams::AgentParameter)
 
     gym = pyimport("gym")
     if environment == "LunarLander-v2"
@@ -206,21 +207,21 @@ function agent(environment, hyperParams::HyperParameter)
     Qϕ = setCritic(envParams.state_size, envParams.action_size)
     Qϕ´= deepcopy(Qϕ)
 
-    global opt_critic = Flux.setup(Flux.Optimise.Adam(hyperParams.critic_η), Qϕ)
-    global opt_actor = Flux.setup(Flux.Optimise.Adam(hyperParams.actor_η), μθ)
+    global opt_critic = Flux.setup(Flux.Optimise.Adam(agentParams.critic_η), Qϕ)
+    global opt_actor = Flux.setup(Flux.Optimise.Adam(agentParams.actor_η), μθ)
     
-    buffer = ReplayBuffer(hyperParams.buffer_size)
+    buffer = ReplayBuffer(agentParams.buffer_size)
 
-    while episode ≤ hyperParams.training_episodes
+    while episode ≤ agentParams.training_episodes
 
         frames = 0
         s, info = env.reset()
         episode_rewards = 0
         t = false
         
-        for step in 1:hyperParams.maximum_episode_length
+        for step in 1:agentParams.maximum_episode_length
             
-            a = action(μθ, s, true, envParams, hyperParams)
+            a = action(μθ, s, true, envParams, agentParams)
             s´, r, terminated, truncated, _ = env.step(a)
 
             terminated | truncated ? t = true : t = false
@@ -229,10 +230,10 @@ function agent(environment, hyperParams::HyperParameter)
             
             remember(buffer, s, a, r, s´, t)
 
-            if episode > hyperParams.train_start
+            if episode > agentParams.train_start
 
-                S, A, R, S´, T = sample(buffer, hyperParams.batch_size)
-                train_step!(S, A, R, S´, T, μθ, μθ´, Qϕ, Qϕ´, hyperParams)
+                S, A, R, S´, T = sample(buffer, agentParams.batch_size)
+                train_step!(S, A, R, S´, T, μθ, μθ´, Qϕ, Qϕ´, agentParams)
                 
             end
 
@@ -248,21 +249,21 @@ function agent(environment, hyperParams::HyperParameter)
         end
 
         
-        if episode % hyperParams.store_frequency == 0
-            push!(hyperParams.trained_agents, deepcopy(μθ))
+        if episode % agentParams.store_frequency == 0
+            push!(agentParams.trained_agents, deepcopy(μθ))
         end
 
 
-        push!(hyperParams.episode_steps, frames)
-        push!(hyperParams.episode_reward, episode_rewards)
+        push!(agentParams.episode_steps, frames)
+        push!(agentParams.episode_reward, episode_rewards)
 
-        println("Episode: $episode | Cumulative Reward: $(round(episode_rewards, digits=2)) | Critic Loss: $(hyperParams.critic_loss[end]) | Actor Loss: $(hyperParams.actor_loss[end]) | Steps: $(frames)")
+        println("Episode: $episode | Cumulative Reward: $(round(episode_rewards, digits=2)) | Critic Loss: $(agentParams.critic_loss[end]) | Actor Loss: $(agentParams.actor_loss[end]) | Steps: $(frames)")
         
         episode += 1
     
     end
     
-    return hyperParams
+    return agentParams
     
 end
 
