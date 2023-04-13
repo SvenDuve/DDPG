@@ -14,6 +14,7 @@ using RLTypes
 
 
 export  agent,
+        AgentParameter,
         renderEnv, 
         setCritic, 
         setActor,
@@ -112,7 +113,7 @@ function remember(buffer::ReplayBuffer, state, action, reward, next_state, done)
 end
 
 
-function sample(buffer::ReplayBuffer, batch_size::Int)
+function sample(buffer::ReplayBuffer, method::AgentMethod, batch_size::Int)
     batch = rand(buffer.memory, batch_size)
     states, actions, rewards, next_states, dones = [], [], [], [], []
     for (s, a, r, ns, d) in batch
@@ -230,7 +231,7 @@ function agent(environment, agentParams::AgentParameter)
 
             if episode > agentParams.train_start
 
-                S, A, R, S´, T = sample(buffer, agentParams.batch_size)
+                S, A, R, S´, T = sample(buffer, AgentMethod(), agentParams.batch_size)
                 train_step!(S, A, R, S´, T, μθ, μθ´, Qϕ, Qϕ´, agentParams)
                 
             end
