@@ -14,7 +14,6 @@ using RLTypes
 
 
 export  agent,
-        AgentParameter,
         renderEnv, 
         setCritic, 
         setActor,
